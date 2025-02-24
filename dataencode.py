@@ -80,44 +80,36 @@ if __name__ == "__main__":
             
 
 
-
     number_of_features = X_train.shape[1]  # Number of one-hot encoded features
     print(number_of_features)
 
     # Iterate through clauses and extract literals
-    # clauses = []
-    # for clause_idx in range(number_of_clauses):
-    #     literals = []
-    #     for feature_idx in range(number_of_features):
-    #         if tm.get_ta_state(clause_idx,feature_idx) > 0:  # If TA state is active
-    #             literals.append(f"Feature_{feature_idx}")
-    #         elif tm.get_ta_state(clause_idx, feature_idx + number_of_features) > 0:  # If negation is active
-    #             literals.append(f"NOT Feature_{feature_idx}")
-
-    #     clause_str = f"Clause {clause_idx + 1}: {' AND '.join(literals)}"
-    #     clauses.append(clause_str)
-
-
-    # output_file = "learned_clauses.txt"
-
-    # # Write the learned clauses to the file
-    # with open(output_file, "w") as file:
-    #     file.write("Learned Clauses:\n\n")
-    #     for clause in clauses:
-    #         file.write(clause + "\n\n")  # Adding new lines for readability
-
-
+    clauses = []
 
     # Initialize a binary matrix to store clauses
     clauses_matrix = np.zeros((number_of_clauses, 2*number_of_features), dtype=int)
 
-    # Extract clauses and store in binary format
     for clause_idx in range(number_of_clauses):
+        literals = []
         for feature_idx in range(number_of_features):
-            if tm.get_ta_state(clause_idx, feature_idx) > 0:  # If TA state is active (positive literal)
-                clauses_matrix[clause_idx, feature_idx] = 1
+            if tm.get_ta_state(clause_idx,feature_idx) > 0:  # If TA state is active
+                literals.append(f"Feature_{feature_idx}")
+                clauses_matrix[clause_idx, 2*feature_idx] = 1
             elif tm.get_ta_state(clause_idx, feature_idx + number_of_features) > 0:  # If negation is active
-                clauses_matrix[clause_idx, feature_idx+number_of_features] = 1
+                literals.append(f"NOT Feature_{feature_idx}")
+                clauses_matrix[clause_idx, 2*feature_idx+1] = 1
+
+        clause_str = f"Clause {clause_idx}: {' AND '.join(literals)}"
+        clauses.append(clause_str)
+
+
+    output_file = "learned_clauses.txt"
+
+    # Write the learned clauses to the file
+    with open(output_file, "w") as file:
+        file.write("Learned Clauses:\n\n")
+        for clause in clauses:
+            file.write(clause + "\n\n")  # Adding new lines for readability
 
 
     # Create a DataFrame for CSV storage
