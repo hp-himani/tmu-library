@@ -27,7 +27,7 @@ X_train, X_test, y_train, y_test = train_test_split(X_binary, Y1, test_size=0.2,
 data = {'x_train' : X_train, 'x_test' : X_test, 'y_train' : y_train, 'y_test' : y_test}
 
 
-number_of_clauses = 60
+number_of_clauses = 40
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -40,7 +40,7 @@ if __name__ == "__main__":
     parser.add_argument("--max_included_literals", default=50, type=int)
     parser.add_argument("--device", default="CPU", type=str, choices=["CPU", "CPU_sparse", "CUDA"])
     parser.add_argument("--weighted_clauses", default=True, type=bool)
-    parser.add_argument("--epochs", default=60, type=int)
+    parser.add_argument("--epochs", default=50, type=int)
     args = parser.parse_args()
 
     tm = TMClassifier(
@@ -76,7 +76,7 @@ if __name__ == "__main__":
 
             _LOGGER.info(f"Epoch: {epoch + 1}, Accuracy: {result:.2f}, Training Time: {benchmark1.elapsed():.2f}s, "
                          f"Testing Time: {benchmark2.elapsed():.2f}s")
-    # _LOGGER.info(maxx)
+    _LOGGER.info(maxx)
             
 
 
@@ -85,23 +85,48 @@ if __name__ == "__main__":
     print(number_of_features)
 
     # Iterate through clauses and extract literals
-    clauses = []
+    # clauses = []
+    # for clause_idx in range(number_of_clauses):
+    #     literals = []
+    #     for feature_idx in range(number_of_features):
+    #         if tm.get_ta_state(clause_idx,feature_idx) > 0:  # If TA state is active
+    #             literals.append(f"Feature_{feature_idx}")
+    #         elif tm.get_ta_state(clause_idx, feature_idx + number_of_features) > 0:  # If negation is active
+    #             literals.append(f"NOT Feature_{feature_idx}")
+
+    #     clause_str = f"Clause {clause_idx + 1}: {' AND '.join(literals)}"
+    #     clauses.append(clause_str)
+
+
+    # output_file = "learned_clauses.txt"
+
+    # # Write the learned clauses to the file
+    # with open(output_file, "w") as file:
+    #     file.write("Learned Clauses:\n\n")
+    #     for clause in clauses:
+    #         file.write(clause + "\n\n")  # Adding new lines for readability
+
+
+
+    # Initialize a binary matrix to store clauses
+    clauses_matrix = np.zeros((number_of_clauses, 2*number_of_features), dtype=int)
+
+    # Extract clauses and store in binary format
     for clause_idx in range(number_of_clauses):
-        literals = []
         for feature_idx in range(number_of_features):
-            if tm.get_ta_state(clause_idx,feature_idx) > 0:  # If TA state is active
-                literals.append(f"Feature_{feature_idx}")
+            if tm.get_ta_state(clause_idx, feature_idx) > 0:  # If TA state is active (positive literal)
+                clauses_matrix[clause_idx, feature_idx] = 1
             elif tm.get_ta_state(clause_idx, feature_idx + number_of_features) > 0:  # If negation is active
-                literals.append(f"NOT Feature_{feature_idx}")
-
-        clause_str = f"Clause {clause_idx + 1}: {' AND '.join(literals)}"
-        clauses.append(clause_str)
+                clauses_matrix[clause_idx, feature_idx+number_of_features] = 1
 
 
-    output_file = "learned_clauses.txt"
+    # Create a DataFrame for CSV storage
+    column_names = ["clause_idx"] + [f"feature_{i}" if j % 2 == 0 else f"~feature_{i}" for i in range(number_of_features) for j in range(2)]
+    df = pd.DataFrame(clauses_matrix, columns=column_names[1:])
 
-    # Write the learned clauses to the file
-    with open(output_file, "w") as file:
-        file.write("Learned Clauses:\n\n")
-        for clause in clauses:
-            file.write(clause + "\n\n")  # Adding new lines for readability
+    # Add clause index as first column
+    df.insert(0, "clause_idx", range(number_of_clauses))
+
+    # Save DataFrame to CSV
+    output_csv = "clauses.csv"
+    df.to_csv(output_csv, index=False)
