@@ -96,7 +96,7 @@ if __name__ == "__main__":
                 literals.append(f"Feature_{feature_idx}")
                 clauses_matrix[clause_idx, 2*feature_idx] = 1
             elif tm.get_ta_state(clause_idx, feature_idx + number_of_features) > 0:  # If negation is active
-                literals.append(f"NOT Feature_{feature_idx}")
+                literals.append(f"NOT-Feature_{feature_idx}")
                 clauses_matrix[clause_idx, 2*feature_idx+1] = 1
 
         clause_str = f"Clause {clause_idx}: {' AND '.join(literals)}"
@@ -107,18 +107,25 @@ if __name__ == "__main__":
 
     # Write the learned clauses to the file
     with open(output_file, "w") as file:
+        file.write(f"Number of Clauses = {number_of_clauses}\n")
+        file.write(f"Number of Features = {number_of_features}\n")
+        file.write(f"Number of Literals = {2*number_of_features}\n")
         file.write("Learned Clauses:\n\n")
-        for clause in clauses:
-            file.write(clause + "\n\n")  # Adding new lines for readability
+        for clause_idx in range(number_of_clauses):
+        # Convert the row of clauses_matrix to a binary string
+            bin = "".join(map(str, clauses_matrix[clause_idx]))
+            file.write(f"Clause {clause_idx} {bin}\n")
+        # for clause in clauses:
+        #     file.write(clause + "\n\n")  # Adding new lines for readability
 
 
     # Create a DataFrame for CSV storage
-    column_names = ["clause_idx"] + [f"feature_{i}" if j % 2 == 0 else f"~feature_{i}" for i in range(number_of_features) for j in range(2)]
-    df = pd.DataFrame(clauses_matrix, columns=column_names[1:])
+    # column_names = ["clause_idx"] + [f"feature_{i}" if j % 2 == 0 else f"~feature_{i}" for i in range(number_of_features) for j in range(2)]
+    # df = pd.DataFrame(clauses_matrix, columns=column_names[1:])
 
     # Add clause index as first column
-    df.insert(0, "clause_idx", range(number_of_clauses))
+    # df.insert(0, "clause_idx", range(number_of_clauses))
 
-    # Save DataFrame to CSV
-    output_csv = "clauses.csv"
-    df.to_csv(output_csv, index=False)
+    # # Save DataFrame to CSV
+    # output_csv = "clauses.csv"
+    # df.to_csv(output_csv, index=False)
