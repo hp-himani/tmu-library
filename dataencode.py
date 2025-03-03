@@ -22,9 +22,11 @@ X_binary = encoder.fit_transform(X).toarray().astype(np.uint32)
 
 Y1= df["class"].values.astype(np.uint32)
 
+
 X_train, X_test, y_train, y_test = train_test_split(X_binary, Y1, test_size=0.2, random_state=42)
 
 data = {'x_train' : X_train, 'x_test' : X_test, 'y_train' : y_train, 'y_test' : y_test}
+    
 
 
 number_of_clauses = 40
@@ -77,11 +79,10 @@ if __name__ == "__main__":
             _LOGGER.info(f"Epoch: {epoch + 1}, Accuracy: {result:.2f}, Training Time: {benchmark1.elapsed():.2f}s, "
                          f"Testing Time: {benchmark2.elapsed():.2f}s")
     _LOGGER.info(maxx)
-            
 
 
     number_of_features = X_train.shape[1]  # Number of one-hot encoded features
-    print(number_of_features)
+
 
     # Iterate through clauses and extract literals
     clauses = []
@@ -109,23 +110,26 @@ if __name__ == "__main__":
     with open(output_file, "w") as file:
         file.write(f"Number of Clauses = {number_of_clauses}\n")
         file.write(f"Number of Features = {number_of_features}\n")
-        file.write(f"Number of Literals = {2*number_of_features}\n")
-        file.write("Learned Clauses:\n\n")
+        file.write(f"Number of Literals = {2*number_of_features}\n\n")
+
+        file.write("Learned Clauses in Binary format:\n\n")
         for clause_idx in range(number_of_clauses):
         # Convert the row of clauses_matrix to a binary string
             bin = "".join(map(str, clauses_matrix[clause_idx]))
             file.write(f"Clause {clause_idx} {bin}\n")
-        # for clause in clauses:
-        #     file.write(clause + "\n\n")  # Adding new lines for readability
+        
+        file.write("\nLearned Clauses:\n\n")
+        for clause in clauses:
+            file.write(clause + "\n\n")
 
 
     # Create a DataFrame for CSV storage
-    # column_names = ["clause_idx"] + [f"feature_{i}" if j % 2 == 0 else f"~feature_{i}" for i in range(number_of_features) for j in range(2)]
-    # df = pd.DataFrame(clauses_matrix, columns=column_names[1:])
+    column_names = ["clause_idx"] + [f"feature_{i}" if j % 2 == 0 else f"~feature_{i}" for i in range(number_of_features) for j in range(2)]
+    df = pd.DataFrame(clauses_matrix, columns=column_names[1:])
 
     # Add clause index as first column
-    # df.insert(0, "clause_idx", range(number_of_clauses))
+    df.insert(0, "clause_idx", range(number_of_clauses))
 
-    # # Save DataFrame to CSV
-    # output_csv = "clauses.csv"
-    # df.to_csv(output_csv, index=False)
+    # Save DataFrame to CSV
+    output_csv = "clauses.csv"
+    df.to_csv(output_csv, index=False)
