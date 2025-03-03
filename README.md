@@ -1,3 +1,5 @@
+First half of clauses is positive(class 0) and other half is negative(class 1)
+
 Attribute Information: (classes: edible=e, poisonous=p)
 
 cap-shape: bell=b,conical=c,convex=x,flat=f, knobbed=k,sunken=s
